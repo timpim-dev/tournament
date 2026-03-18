@@ -39,10 +39,41 @@ const elements = {
     imagePreviewImg: document.getElementById('image-preview-img'),
     imageFilename: document.getElementById('image-filename'),
     removeImageBtn: document.getElementById('remove-image-btn'),
-    matchNotesInput: document.getElementById('match-notes-input')
+    matchNotesInput: document.getElementById('match-notes-input'),
+    sidebarToggle: document.getElementById('sidebar-toggle'),
+    sidebar: document.querySelector('.sidebar'),
+    mainContent: document.querySelector('.main-content')
 };
 
 let currentPlayerImage = null;
+
+// --- MOBILE SIDEBAR ---
+if (elements.sidebarToggle) {
+    elements.sidebarToggle.addEventListener('click', () => {
+        elements.sidebar.classList.toggle('open');
+    });
+}
+
+// Close sidebar on mobile when clicking main content
+elements.mainContent.addEventListener('click', () => {
+    if (window.innerWidth <= 768 && elements.sidebar.classList.contains('open')) {
+        elements.sidebar.classList.remove('open');
+    }
+});
+
+// Close sidebar on mobile after generating bracket
+function closeSidebarOnMobile() {
+    if (window.innerWidth <= 768) {
+        elements.sidebar.classList.remove('open');
+    }
+}
+
+// Redraw lines when sidebar is toggled (it affects layout)
+elements.sidebar.addEventListener('transitionend', () => {
+    if (tournament.status === 'active' || tournament.status === 'finished') {
+        drawLines();
+    }
+});
 
 // --- IMAGE UPLOAD ---
 elements.playerImageInput.addEventListener('change', (e) => {
@@ -379,6 +410,7 @@ function generateBracket() {
 function startTournamentView() {
     elements.welcomeScreen.style.display = 'none';
     elements.bracketView.style.display = 'flex';
+    closeSidebarOnMobile();
     renderBracket();
 }
 

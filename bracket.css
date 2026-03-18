@@ -290,3 +290,46 @@
 .bracket-container::-webkit-scrollbar-thumb:hover {
     background: var(--orange-dim);
 }
+
+@media (max-width: 768px) {
+    .bracket-container {
+        padding: 20px;
+        gap: 30px;
+    }
+    .round-column {
+        min-width: 180px;
+    }
+    .match-card {
+        padding: 8px;
+        font-size: 12px;
+    }
+    .player-row {
+        font-size: 12px;
+        padding: 3px 6px;
+    }
+    .player-avatar {
+        width: 18px;
+        height: 18px;
+    }
+    .bracket-section-title {
+        font-size: 18px;
+        margin: 15px 0;
+    }
+    .round-title {
+        font-size: 14px;
+        top: -25px;
+    }
+    .match-connector-right {
+        right: -15px;
+        width: 15px;
+    }
+    .scorecard-row {
+        grid-template-columns: 1fr 60px 60px;
+        gap: 6px;
+        padding: 8px 4px;
+    }
+    .scorecard-input {
+        padding: 4px;
+        font-size: 12px;
+    }
+}
