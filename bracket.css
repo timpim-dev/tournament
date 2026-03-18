@@ -1,0 +1,292 @@
+/* Bracket Specific Styles */
+
+.bracket-container {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 100%;
+    padding: 40px;
+    gap: 60px; /* Space between rounds */
+}
+
+/* Animations */
+@keyframes pixelateIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+        filter: blur(5px) contrast(150%);
+    }
+    50% {
+        filter: blur(2px) contrast(120%) brightness(1.5);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: blur(0) contrast(100%) brightness(1);
+    }
+}
+
+@keyframes glowPulse {
+    0% { box-shadow: 0 0 5px var(--orange-glow); }
+    50% { box-shadow: 0 0 20px var(--orange-glow); border-color: var(--orange2); }
+    100% { box-shadow: 0 0 5px var(--orange-glow); }
+}
+
+.pixelate-in {
+    animation: pixelateIn 0.5s ease-out forwards;
+}
+
+.match-card.loading-glow {
+    animation: glowPulse 1.5s infinite;
+}
+
+.round-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    min-width: 240px;
+    position: relative;
+    opacity: 0; /* Managed by JS animation class */
+}
+
+/* Losers Bracket Specific */
+.bracket-section-title {
+    color: var(--orange2);
+    font-size: 24px;
+    margin: 20px 0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-bottom: 2px solid var(--orange-dim);
+    padding-bottom: 10px;
+}
+
+.losers-bracket-container {
+    margin-top: 100px;
+    border-top: 1px dashed var(--border);
+    padding-top: 50px;
+    display: flex;
+    flex-direction: column;
+}
+
+.bracket-row {
+    display: flex;
+    flex-direction: row;
+    gap: 60px;
+    padding: 20px 0;
+}
+
+.match-card.is-exhausted {
+    border-color: var(--danger) !important;
+}
+
+/* Avatar Styles */
+.player-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.player-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Scorecard Styles */
+.scorecard-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px;
+    gap: 12px;
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.scorecard-row:hover {
+    background: rgba(255, 106, 0, 0.05);
+}
+
+.scorecard-header {
+    font-size: 12px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid var(--orange-dim);
+}
+
+.scorecard-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: white;
+    padding: 6px;
+    border-radius: 4px;
+    text-align: center;
+    font-family: inherit;
+    width: 100%;
+}
+
+.scorecard-input:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 5px var(--orange-glow);
+    outline: none;
+}
+
+.scorecard-total-row {
+    background: var(--surface2);
+    font-weight: bold;
+    color: var(--orange2);
+    border-top: 2px solid var(--orange-dim);
+}
+
+/* Note Indicator */
+.note-indicator {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--orange);
+    color: black;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: bold;
+    box-shadow: 0 0 10px var(--orange-glow);
+    z-index: 10;
+}
+
+.match-card-notes-preview {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+.round-title {
+    text-align: center;
+    color: var(--orange-dim);
+    margin-bottom: 20px;
+    font-size: 18px;
+    position: absolute;
+    top: -30px;
+    width: 100%;
+}
+
+.match-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    width: 100%;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 10px 0; /* Base margin, overridden by JS for spacing */
+}
+
+.match-card:hover {
+    border-color: var(--orange);
+    box-shadow: 0 0 10px var(--orange-glow);
+}
+
+.match-card.completed {
+    border-color: var(--success);
+}
+
+.match-card.active {
+    border-color: var(--orange2);
+    box-shadow: 0 0 15px var(--orange-glow);
+}
+
+.player-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.player-row.winner {
+    background: var(--orange-dim);
+    color: white;
+}
+
+.player-row.loser {
+    opacity: 0.5;
+}
+
+.player-score {
+    font-weight: bold;
+    color: var(--orange2);
+}
+
+/* Connectors */
+.match-connector-right {
+    position: absolute;
+    right: -30px; /* Half of gap */
+    top: 50%;
+    width: 30px;
+    height: 2px;
+    background: var(--border);
+    z-index: -1;
+}
+
+/* Modals */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--bg);
+    border: 1px solid var(--orange);
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Scrollbar for bracket */
+.bracket-container::-webkit-scrollbar {
+    height: 10px;
+}
+.bracket-container::-webkit-scrollbar-track {
+    background: var(--surface);
+}
+.bracket-container::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 5px;
+}
+.bracket-container::-webkit-scrollbar-thumb:hover {
+    background: var(--orange-dim);
+}
