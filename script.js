@@ -61,6 +61,70 @@ elements.mainContent.addEventListener('click', () => {
     }
 });
 
+// --- DRAGGABLE SCORE MODAL ---
+const scoreModalContent = document.getElementById('score-modal-content');
+const dragHandle = document.getElementById('modal-drag-handle');
+let isDragging = false;
+let dragOffsetX, dragOffsetY;
+
+dragHandle.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    const rect = scoreModalContent.getBoundingClientRect();
+    dragOffsetX = e.clientX - rect.left;
+    dragOffsetY = e.clientY - rect.top;
+    scoreModalContent.style.margin = '0';
+    scoreModalContent.style.left = (rect.left - (window.innerWidth - rect.width) / 2) + 'px';
+    scoreModalContent.style.top = (rect.top - (window.innerHeight - rect.height) / 2) + 'px';
+    dragHandle.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const x = e.clientX - dragOffsetX;
+    const y = e.clientY - dragOffsetY;
+    scoreModalContent.style.left = x + 'px';
+    scoreModalContent.style.top = y + 'px';
+    scoreModalContent.style.transform = 'none';
+});
+
+document.addEventListener('mouseup', () => {
+    if (isDragging) {
+        isDragging = false;
+        dragHandle.style.cursor = 'grab';
+    }
+});
+
+// --- DRAGGABLE BRACKET VIEW ---
+const bracketView = elements.bracketView;
+let isBracketDragging = false;
+let bracketScrollStartX, bracketScrollStartY;
+let bracketScrollLeft, bracketScrollTop;
+
+bracketView.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.match-card') || e.target.closest('button')) return;
+    isBracketDragging = true;
+    bracketScrollStartX = e.pageX;
+    bracketScrollStartY = e.pageY;
+    bracketScrollLeft = bracketView.scrollLeft;
+    bracketScrollTop = bracketView.scrollTop;
+    bracketView.classList.add('dragging');
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isBracketDragging) return;
+    const dx = e.pageX - bracketScrollStartX;
+    const dy = e.pageY - bracketScrollStartY;
+    bracketView.scrollLeft = bracketScrollLeft - dx;
+    bracketView.scrollTop = bracketScrollTop - dy;
+});
+
+document.addEventListener('mouseup', () => {
+    if (isBracketDragging) {
+        isBracketDragging = false;
+        bracketView.classList.remove('dragging');
+    }
+});
+
 // Close sidebar on mobile after generating bracket
 function closeSidebarOnMobile() {
     if (window.innerWidth <= 768) {
@@ -416,26 +480,38 @@ function startTournamentView() {
 
 // --- RENDERING BRACKET ---
 function renderBracket() {
-    elements.bracketView.innerHTML = '<svg id="bracket-svg" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 0;"></svg>';
+    elements.bracketView.innerHTML = '<svg id="bracket-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;"></svg>';
     
     if (tournament.settings.format === 'double') {
         const wb = tournament.matches.filter(m => m.bracket === 'winners');
         const lb = tournament.matches.filter(m => m.bracket === 'losers');
         const final = tournament.matches.filter(m => m.bracket === 'final');
         
-        elements.bracketView.innerHTML += `<div class="bracket-section-title">Winners Bracket</div>`;
+        const wbTitle = document.createElement('div');
+        wbTitle.className = 'bracket-section-title';
+        wbTitle.textContent = 'Winners Bracket';
+        elements.bracketView.appendChild(wbTitle);
+        
         const wbContainer = document.createElement('div');
         wbContainer.className = 'bracket-row';
         renderBracketSection(wb, wbContainer);
         elements.bracketView.appendChild(wbContainer);
 
-        elements.bracketView.innerHTML += `<div class="bracket-section-title">Losers Bracket</div>`;
+        const lbTitle = document.createElement('div');
+        lbTitle.className = 'bracket-section-title';
+        lbTitle.textContent = 'Losers Bracket';
+        elements.bracketView.appendChild(lbTitle);
+        
         const lbContainer = document.createElement('div');
         lbContainer.className = 'bracket-row';
         renderBracketSection(lb, lbContainer);
         elements.bracketView.appendChild(lbContainer);
 
-        elements.bracketView.innerHTML += `<div class="bracket-section-title">Grand Final</div>`;
+        const finalTitle = document.createElement('div');
+        finalTitle.className = 'bracket-section-title';
+        finalTitle.textContent = 'Grand Final';
+        elements.bracketView.appendChild(finalTitle);
+        
         const finalContainer = document.createElement('div');
         finalContainer.className = 'bracket-row';
         renderBracketSection(final, finalContainer);
@@ -582,6 +658,11 @@ function calculateTotalScore(match, playerId) {
 let currentMatchId = null;
 
 function openScoreModal(matchId) {
+    scoreModalContent.style.margin = '10px';
+    scoreModalContent.style.left = '';
+    scoreModalContent.style.top = '';
+    scoreModalContent.style.transform = '';
+
     const match = tournament.matches.find(m => m.id === matchId);
     if (!match.p1 || !match.p2) return; // Can't score incomplete match
     if (match.completed && confirm("Match finished. Edit scores?") === false) return;
@@ -655,6 +736,10 @@ function openScoreModal(matchId) {
 
 elements.closeModalBtn.addEventListener('click', () => {
     elements.scoreModal.style.display = 'none';
+    scoreModalContent.style.margin = '10px';
+    scoreModalContent.style.left = '';
+    scoreModalContent.style.top = '';
+    scoreModalContent.style.transform = '';
 });
 
 elements.saveScoreBtn.addEventListener('click', () => {
