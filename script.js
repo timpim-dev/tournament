@@ -25,6 +25,14 @@ const elements = {
     importBtn: document.getElementById('import-btn'),
     welcomeScreen: document.getElementById('welcome-screen'),
     bracketView: document.getElementById('bracket-view'),
+    leaderboardView: document.getElementById('leaderboard-view'),
+    tournamentEndView: document.getElementById('tournament-end-view'),
+    leaderboardBtn: document.getElementById('leaderboard-btn'),
+    finalLeaderboardBtn: document.getElementById('final-leaderboard-btn'),
+    leaderboardBody: document.getElementById('leaderboard-body'),
+    winnerName: document.getElementById('winner-name'),
+    podiumContainer: document.getElementById('podium-container'),
+
     scoreModal: document.getElementById('score-modal'),
     modalMatchTitle: document.getElementById('modal-match-title'),
     modalCriteriaInputs: document.getElementById('modal-criteria-inputs'),
@@ -517,12 +525,148 @@ function generateBracket() {
     startTournamentView();
 }
 
+// --- VIEW MANAGEMENT ---
+function showView(viewName) {
+    elements.welcomeScreen.style.display = viewName === 'welcome' ? 'flex' : 'none';
+    elements.bracketView.style.display = viewName === 'bracket' ? 'block' : 'none';
+    elements.leaderboardView.style.display = viewName === 'leaderboard' ? 'block' : 'none';
+    elements.tournamentEndView.style.display = viewName === 'end' ? 'flex' : 'none';
+    
+    if (viewName === 'leaderboard') renderLeaderboard();
+}
+
+elements.leaderboardBtn.addEventListener('click', () => {
+    if (elements.leaderboardView.style.display === 'block') {
+        showView('bracket');
+        elements.leaderboardBtn.textContent = 'Leaderboard';
+    } else {
+        showView('leaderboard');
+        elements.leaderboardBtn.textContent = 'Back to Bracket';
+    }
+});
+
+elements.finalLeaderboardBtn.addEventListener('click', () => {
+    showView('leaderboard');
+    elements.leaderboardBtn.style.display = 'block';
+    elements.leaderboardBtn.textContent = 'Back to Results';
+});
+
+function calculateLeaderboard() {
+    const stats = {};
+    tournament.players.forEach(p => {
+        stats[p.id] = { 
+            name: p.name, 
+            image: p.image,
+            wins: 0, 
+            losses: 0, 
+            points: 0, 
+            matches: 0 
+        };
+    });
+
+    tournament.matches.forEach(m => {
+        if (m.completed) {
+            if (m.p1) {
+                stats[m.p1.id].matches++;
+                stats[m.p1.id].points += calculateTotalScore(m, m.p1.id);
+                if (m.winner === m.p1.id) stats[m.p1.id].wins++;
+                else if (m.winner) stats[m.p1.id].losses++;
+            }
+            if (m.p2) {
+                stats[m.p2.id].matches++;
+                stats[m.p2.id].points += calculateTotalScore(m, m.p2.id);
+                if (m.winner === m.p2.id) stats[m.p2.id].wins++;
+                else if (m.winner) stats[m.p2.id].losses++;
+            }
+        }
+    });
+
+    return Object.values(stats).sort((a, b) => {
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        return b.points - a.points;
+    });
+}
+
+function renderLeaderboard() {
+    const sorted = calculateLeaderboard();
+    elements.leaderboardBody.innerHTML = '';
+    
+    sorted.forEach((player, idx) => {
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid var(--border)';
+        const img = player.image ? `<img src="${player.image}" class="player-avatar" style="margin-right:10px;">` : `<div class="player-avatar" style="display:inline-flex;align-items:center;justify-content:center;font-size:10px;background:var(--surface2);margin-right:10px;">${player.name[0]}</div>`;
+        
+        row.innerHTML = `
+            <td style="padding: 12px; color: ${idx < 3 ? 'var(--orange2)' : 'var(--text)'};">#${idx + 1}</td>
+            <td style="padding: 12px; display: flex; align-items: center;">
+                ${img} ${player.name}
+            </td>
+            <td style="padding: 12px;">${player.wins}W - ${player.losses}L</td>
+            <td style="padding: 12px; color: var(--orange);">${player.points}</td>
+            <td style="padding: 12px; color: var(--text-dim);">${player.matches}</td>
+        `;
+        elements.leaderboardBody.appendChild(row);
+    });
+}
+
+function checkTournamentEnd() {
+    const allMatches = tournament.matches.filter(m => m.p1?.id !== 'BYE' && m.p2?.id !== 'BYE');
+    const isFinished = allMatches.every(m => m.completed);
+
+    if (isFinished && allMatches.length > 0) {
+        tournament.status = 'finished';
+        saveState();
+        
+        // The winner is the #1 in the leaderboard
+        const sorted = calculateLeaderboard();
+        const winner = sorted[0];
+        
+        showTournamentEnd(winner);
+    }
+}
+
+function showTournamentEnd(winner) {
+    elements.winnerName.textContent = winner ? winner.name : "Tournament Over";
+    showView('end');
+    
+    // Hide reset view button on end screen
+    if (elements.resetViewBtn) elements.resetViewBtn.style.display = 'none';
+    
+    // Render mini-podium
+    const sorted = calculateLeaderboard();
+    elements.podiumContainer.innerHTML = '';
+    
+    // Top 3 positions: 2nd, 1st, 3rd (for visual appeal)
+    const podiumOrder = [1, 0, 2];
+    podiumOrder.forEach(idx => {
+        const p = sorted[idx];
+        if (!p) return;
+        
+        const height = idx === 0 ? 120 : (idx === 1 ? 80 : 60);
+        const color = idx === 0 ? 'var(--orange)' : (idx === 1 ? '#C0C0C0' : '#CD7F32');
+        
+        const podiumItem = document.createElement('div');
+        podiumItem.style.display = 'flex';
+        podiumItem.style.flexDirection = 'column';
+        podiumItem.style.alignItems = 'center';
+        podiumItem.innerHTML = `
+            <div style="font-size: 14px; color: var(--text-dim); margin-bottom: 5px; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</div>
+            <div style="width: 60px; height: ${height}px; background: ${color}; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 24px; box-shadow: 0 0 15px ${color}44;">
+                ${idx + 1}
+            </div>
+        `;
+        elements.podiumContainer.appendChild(podiumItem);
+    });
+}
+
 function startTournamentView() {
     elements.welcomeScreen.style.display = 'none';
     elements.bracketView.style.display = 'flex';
     if (elements.resetViewBtn) elements.resetViewBtn.style.display = 'block';
+    if (elements.leaderboardBtn) elements.leaderboardBtn.style.display = 'block';
     closeSidebarOnMobile();
     renderBracket();
+    checkTournamentEnd(); // Check if already finished on load
 }
 
 // --- RENDERING BRACKET ---
@@ -845,6 +989,7 @@ elements.saveScoreBtn.addEventListener('click', () => {
     elements.scoreModal.style.display = 'none';
     saveState();
     renderBracket();
+    checkTournamentEnd();
 });
 
 function advanceWinner(match) {

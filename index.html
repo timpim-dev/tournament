@@ -55,9 +55,9 @@
             <div class="sidebar-footer">
                 <button id="generate-bracket-btn" class="save-btn" style="width: 100%; text-align: center; margin-bottom: 10px;">Start Tournament</button>
                 <div class="section-title">DATA</div>
-                <button id="export-btn" class="nav-link" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer;">Export Save Code</button>
-                <button id="import-btn" class="nav-link" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer;">Import Save Code</button>
-                <button id="reset-btn" class="nav-link" style="width: 100%; text-align: left; color: var(--danger); background: none; border: none; cursor: pointer;">Reset All</button>
+                <button id="export-btn" class="nav-link" style="width: 100%; text-align: left;">Export Save Code</button>
+                <button id="import-btn" class="nav-link" style="width: 100%; text-align: left;">Import Save Code</button>
+                <button id="reset-btn" class="nav-link" style="width: 100%; text-align: left; color: var(--danger);">Reset All</button>
             </div>
         </div>
 
@@ -69,6 +69,7 @@
                     <div class="brand-text">FELIXX TOURNAMENT</div>
                 </div>
                 <div class="nav-right" style="display: flex; gap: 10px;">
+                    <button id="leaderboard-btn" class="nav-link" style="border: 1px solid var(--border); display: none;">Leaderboard</button>
                     <button id="reset-view-btn" class="nav-link" style="border: 1px solid var(--border); display: none;">Center Bracket</button>
                 </div>
             </div>
@@ -85,6 +86,39 @@
                     <!-- SVG Overlay for lines -->
                     <svg id="bracket-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;"></svg>
                     <!-- Bracket rounds injected here -->
+                </div>
+
+                <!-- LEADERBOARD VIEW -->
+                <div id="leaderboard-view" class="settings-container" style="display: none;">
+                    <h1>Leaderboard</h1>
+                    <div class="settings-dashboard">
+                        <div class="settings-card" style="grid-column: 1 / -1;">
+                            <table id="leaderboard-table" style="width: 100%; border-collapse: collapse; color: var(--text);">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid var(--orange-dim); color: var(--text-dim); text-align: left;">
+                                        <th style="padding: 12px;">Rank</th>
+                                        <th style="padding: 12px;">Player</th>
+                                        <th style="padding: 12px;">W/L</th>
+                                        <th style="padding: 12px;">Total Points</th>
+                                        <th style="padding: 12px;">Matches</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leaderboard-body">
+                                    <!-- Leaderboard rows go here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOURNAMENT END VIEW -->
+                <div id="tournament-end-view" class="welcome-screen" style="display: none; flex-direction: column; justify-content: center; align-items: center;">
+                    <div class="greeting" id="winner-name">Winner Name!</div>
+                    <div class="sub-greeting">Tournament Champion</div>
+                    <div id="podium-container" style="display: flex; gap: 20px; margin-top: 40px; align-items: flex-end;">
+                        <!-- Podium items -->
+                    </div>
+                    <button id="final-leaderboard-btn" class="save-btn" style="margin-top: 40px;">View Full Standings</button>
                 </div>
             </div>
         </div>
