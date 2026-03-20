@@ -42,7 +42,8 @@ const elements = {
     matchNotesInput: document.getElementById('match-notes-input'),
     sidebarToggle: document.getElementById('sidebar-toggle'),
     sidebar: document.querySelector('.sidebar'),
-    mainContent: document.querySelector('.main-content')
+    mainContent: document.querySelector('.main-content'),
+    resetViewBtn: document.getElementById('reset-view-btn')
 };
 
 let currentPlayerImage = null;
@@ -94,36 +95,81 @@ document.addEventListener('mouseup', () => {
     }
 });
 
-// --- DRAGGABLE BRACKET VIEW ---
-const bracketView = elements.bracketView;
-let isBracketDragging = false;
-let bracketScrollStartX, bracketScrollStartY;
-let bracketScrollLeft, bracketScrollTop;
+// --- ZOOM & PAN STATE ---
+let zoom = 1;
+let panX = 0;
+let panY = 0;
+let isPanning = false;
+let startX, startY;
 
-bracketView.addEventListener('mousedown', (e) => {
-    if (e.target.closest('.match-card') || e.target.closest('button')) return;
-    isBracketDragging = true;
-    bracketScrollStartX = e.pageX;
-    bracketScrollStartY = e.pageY;
-    bracketScrollLeft = bracketView.scrollLeft;
-    bracketScrollTop = bracketView.scrollTop;
-    bracketView.classList.add('dragging');
-});
-
-document.addEventListener('mousemove', (e) => {
-    if (!isBracketDragging) return;
-    const dx = e.pageX - bracketScrollStartX;
-    const dy = e.pageY - bracketScrollStartY;
-    bracketView.scrollLeft = bracketScrollLeft - dx;
-    bracketView.scrollTop = bracketScrollTop - dy;
-});
-
-document.addEventListener('mouseup', () => {
-    if (isBracketDragging) {
-        isBracketDragging = false;
-        bracketView.classList.remove('dragging');
+function updateTransform() {
+    const content = document.getElementById('bracket-content');
+    if (content) {
+        content.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
     }
-});
+}
+
+function resetView() {
+    panX = 50;
+    panY = 50;
+    zoom = 0.8;
+    updateTransform();
+}
+
+if (elements.resetViewBtn) {
+    elements.resetViewBtn.addEventListener('click', resetView);
+}
+
+function handleWheel(e) {
+    if (!elements.bracketView.contains(e.target)) return;
+    e.preventDefault();
+    
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newZoom = Math.min(Math.max(zoom * delta, 0.1), 3);
+    
+    // Zoom towards mouse position
+    const rect = elements.bracketView.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Calculate mouse position relative to content before zoom
+    const contentX = (mouseX - panX) / zoom;
+    const contentY = (mouseY - panY) / zoom;
+    
+    zoom = newZoom;
+    
+    // Update pan to keep content position under mouse
+    panX = mouseX - contentX * zoom;
+    panY = mouseY - contentY * zoom;
+    
+    updateTransform();
+}
+
+function handleMouseDown(e) {
+    if (e.target.closest('.match-card') || e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return;
+    isPanning = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+    elements.bracketView.classList.add('dragging');
+}
+
+function handleMouseMove(e) {
+    if (!isPanning) return;
+    panX = e.clientX - startX;
+    panY = e.clientY - startY;
+    updateTransform();
+}
+
+function handleMouseUp() {
+    isPanning = false;
+    elements.bracketView.classList.remove('dragging');
+}
+
+// Add event listeners for panning and zooming
+elements.bracketView.addEventListener('wheel', handleWheel, { passive: false });
+elements.bracketView.addEventListener('mousedown', handleMouseDown);
+document.addEventListener('mousemove', handleMouseMove);
+document.addEventListener('mouseup', handleMouseUp);
 
 // Close sidebar on mobile after generating bracket
 function closeSidebarOnMobile() {
@@ -474,13 +520,19 @@ function generateBracket() {
 function startTournamentView() {
     elements.welcomeScreen.style.display = 'none';
     elements.bracketView.style.display = 'flex';
+    if (elements.resetViewBtn) elements.resetViewBtn.style.display = 'block';
     closeSidebarOnMobile();
     renderBracket();
 }
 
 // --- RENDERING BRACKET ---
 function renderBracket() {
-    elements.bracketView.innerHTML = '<svg id="bracket-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;"></svg>';
+    elements.bracketView.innerHTML = `
+        <div id="bracket-content" class="bracket-content ${tournament.settings.format === 'double' ? 'double-elim' : ''}">
+            <svg id="bracket-svg" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 0;"></svg>
+        </div>
+    `;
+    const content = document.getElementById('bracket-content');
     
     if (tournament.settings.format === 'double') {
         const wb = tournament.matches.filter(m => m.bracket === 'winners');
@@ -490,35 +542,43 @@ function renderBracket() {
         const wbTitle = document.createElement('div');
         wbTitle.className = 'bracket-section-title';
         wbTitle.textContent = 'Winners Bracket';
-        elements.bracketView.appendChild(wbTitle);
+        content.appendChild(wbTitle);
         
         const wbContainer = document.createElement('div');
         wbContainer.className = 'bracket-row';
         renderBracketSection(wb, wbContainer);
-        elements.bracketView.appendChild(wbContainer);
+        content.appendChild(wbContainer);
 
         const lbTitle = document.createElement('div');
         lbTitle.className = 'bracket-section-title';
         lbTitle.textContent = 'Losers Bracket';
-        elements.bracketView.appendChild(lbTitle);
+        content.appendChild(lbTitle);
         
         const lbContainer = document.createElement('div');
         lbContainer.className = 'bracket-row';
         renderBracketSection(lb, lbContainer);
-        elements.bracketView.appendChild(lbContainer);
+        content.appendChild(lbContainer);
 
         const finalTitle = document.createElement('div');
         finalTitle.className = 'bracket-section-title';
         finalTitle.textContent = 'Grand Final';
-        elements.bracketView.appendChild(finalTitle);
+        content.appendChild(finalTitle);
         
         const finalContainer = document.createElement('div');
         finalContainer.className = 'bracket-row';
         renderBracketSection(final, finalContainer);
-        elements.bracketView.appendChild(finalContainer);
+        content.appendChild(finalContainer);
     } else {
-        renderBracketSection(tournament.matches, elements.bracketView);
+        renderBracketSection(tournament.matches, content);
     }
+
+    // Reset pan/zoom on first render of a new bracket
+    if (panX === 0 && panY === 0) {
+        panX = 50;
+        panY = 50;
+        zoom = 0.8;
+    }
+    updateTransform();
 
     // Draw lines after layout
     setTimeout(drawLines, 100);
@@ -552,45 +612,51 @@ function renderBracketSection(matches, container) {
 
 function drawLines() {
     const svg = document.getElementById('bracket-svg');
-    if (!svg) return;
+    const content = document.getElementById('bracket-content');
+    if (!svg || !content) return;
     
-    // Resize SVG to full scrollable area
-    svg.style.width = elements.bracketView.scrollWidth + 'px';
-    svg.style.height = elements.bracketView.scrollHeight + 'px';
+    // Resize SVG to fit content exactly
+    svg.setAttribute('width', content.scrollWidth);
+    svg.setAttribute('height', content.scrollHeight);
+    svg.style.width = content.scrollWidth + 'px';
+    svg.style.height = content.scrollHeight + 'px';
     
     // Clear paths
     svg.innerHTML = '';
 
+    const contentRect = content.getBoundingClientRect();
+
     tournament.matches.forEach(match => {
         const el = document.getElementById(`match-${match.id}`);
-        const containerRect = elements.bracketView.getBoundingClientRect();
+        if (!el) return;
 
         // 1. Next Match Line
         if (match.nextMatchId) {
             const nextEl = document.getElementById(`match-${match.nextMatchId}`);
-            if (el && nextEl) {
-                drawElbowPath(svg, el, nextEl, containerRect, 'var(--border)', false, match.winner !== null);
+            if (nextEl) {
+                drawElbowPath(svg, el, nextEl, contentRect, 'var(--border)', false, match.winner !== null);
             }
         }
 
         // 2. Loser Match Line (Double Elim)
         if (match.loserMatchId) {
             const loserEl = document.getElementById(`match-${match.loserMatchId}`);
-            if (el && loserEl) {
-                drawElbowPath(svg, el, loserEl, containerRect, 'var(--text-muted)', true, match.winner !== null);
+            if (loserEl) {
+                drawElbowPath(svg, el, loserEl, contentRect, 'var(--text-muted)', true, match.winner !== null);
             }
         }
     });
 }
 
-function drawElbowPath(svg, el, nextEl, containerRect, color, isDashed = false, hasWinner = false) {
+function drawElbowPath(svg, el, nextEl, contentRect, color, isDashed = false, hasWinner = false) {
     const startRect = el.getBoundingClientRect();
     const endRect = nextEl.getBoundingClientRect();
 
-    const x1 = (startRect.left - containerRect.left) + startRect.width + elements.bracketView.scrollLeft;
-    const y1 = (startRect.top - containerRect.top) + startRect.height / 2 + elements.bracketView.scrollTop;
-    const x2 = (endRect.left - containerRect.left) + elements.bracketView.scrollLeft;
-    const y2 = (endRect.top - containerRect.top) + endRect.height / 2 + elements.bracketView.scrollTop;
+    // Coordinates relative to content div, compensating for zoom
+    const x1 = (startRect.left - contentRect.left) / zoom + (startRect.width / zoom);
+    const y1 = (startRect.top - contentRect.top) / zoom + (startRect.height / zoom / 2);
+    const x2 = (endRect.left - contentRect.left) / zoom;
+    const y2 = (endRect.top - contentRect.top) / zoom + (endRect.height / zoom / 2);
 
     const midX = x1 + (x2 - x1) / 2;
     

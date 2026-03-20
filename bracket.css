@@ -1,20 +1,34 @@
 /* Bracket Specific Styles */
 
 .bracket-container {
-    display: flex;
-    flex-direction: row;
-    overflow-x: auto;
-    overflow-y: auto;
+    overflow: hidden; /* Viewport for panning */
     height: 100%;
-    padding: 40px;
-    gap: 60px;
+    width: 100%;
     cursor: grab;
     position: relative;
+    background: rgba(0,0,0,0.2);
 }
 
 .bracket-container.dragging {
     cursor: grabbing;
-    user-select: none;
+}
+
+.bracket-content {
+    display: inline-flex;
+    flex-direction: row;
+    padding: 150px; /* Increased padding for even more panning room */
+    gap: 120px; /* Doubled the gap for "long" brackets */
+    transform-origin: 0 0;
+    will-change: transform;
+    min-width: 100%;
+    min-height: 100%;
+    align-items: flex-start;
+}
+
+/* Double Elimination Stacked Layout */
+.bracket-content.double-elim {
+    flex-direction: column;
+    gap: 100px;
 }
 
 /* Animations */
@@ -52,7 +66,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    min-width: 240px;
+    min-width: 300px; /* Increased from 240px */
     position: relative;
     opacity: 0; /* Managed by JS animation class */
 }
@@ -79,7 +93,7 @@
 .bracket-row {
     display: flex;
     flex-direction: row;
-    gap: 60px;
+    gap: 120px; /* Increased from 60px */
     padding: 20px 0;
 }
 
